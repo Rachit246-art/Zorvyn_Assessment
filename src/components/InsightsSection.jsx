@@ -33,7 +33,6 @@ const InsightsSection = () => {
   return (
     <div className="insights-section">
       <div className="section-title">
-        <Zap size={20} className="icon" />
         <h2 className="font-outfit">Smart Insights</h2>
       </div>
 

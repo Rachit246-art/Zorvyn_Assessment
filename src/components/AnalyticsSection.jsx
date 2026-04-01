@@ -49,7 +49,7 @@ const AnalyticsSection = () => {
         <div className="custom-tooltip glass" style={{ padding: '12px 16px', border: '1px solid var(--border-glass)', borderRadius: '12px' }}>
           <p className="label" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 600 }}>{name}</p>
           <p className="value" style={{ color: color, fontWeight: 700, fontSize: '1rem' }}>
-            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}
+            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)}
           </p>
         </div>
       );
@@ -127,7 +127,16 @@ const AnalyticsSection = () => {
                 verticalAlign="bottom" 
                 align="center" 
                 iconType="circle"
-                wrapperStyle={{ paddingTop: '20px', fontSize: '11px' }}
+                wrapperStyle={{ 
+                  paddingTop: '24px', 
+                  fontSize: '11px',
+                  lineHeight: '20px',
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  gap: '10px'
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
