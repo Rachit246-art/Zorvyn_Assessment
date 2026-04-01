@@ -219,7 +219,7 @@ const TransactionList = () => {
                           <span className="card-date">{new Date(item.date).toLocaleDateString()}</span>
                         </div>
                         <span className={`card-amount ${item.type}`}>
-                          {item.type === 'income' ? '+' : '-'}${Math.abs(item.amount).toFixed(2)}
+                          {item.type === 'income' ? '+' : '-'}₹{Math.abs(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                       <div className="card-mid">
@@ -275,7 +275,7 @@ const TransactionList = () => {
                         </td>
                         <td className="note-cell">{item.note}</td>
                         <td className={`amount-cell ${item.type}`}>
-                          {item.type === 'income' ? '+' : '-'}${Math.abs(item.amount).toFixed(2)}
+                          {item.type === 'income' ? '+' : '-'}₹{Math.abs(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </td>
                         {role === 'admin' && (
                           <td className="actions-cell">

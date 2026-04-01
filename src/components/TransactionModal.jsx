@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, DollarSign, Type, FileText } from 'lucide-react';
+import { X, Calendar, IndianRupee, Type, FileText } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 
 const TransactionModal = ({ isOpen, onClose, editItem }) => {
@@ -83,7 +83,7 @@ const TransactionModal = ({ isOpen, onClose, editItem }) => {
                 </div>
 
                 <div className="input-group">
-                  <label><DollarSign size={14} /> Amount</label>
+                  <label><IndianRupee size={14} /> Amount</label>
                   <input 
                     type="number" 
                     placeholder="0.00" 

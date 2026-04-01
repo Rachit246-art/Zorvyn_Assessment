@@ -42,7 +42,7 @@ const InsightsSection = () => {
           title="Highest Spending"
           value={insights.highestSpendingCategory}
           icon={TrendingUp}
-          description={`You've spent $${insights.highestSpendingAmount.toFixed(2)} on ${insights.highestSpendingCategory} this month.`}
+          description={`You've spent ₹${insights.highestSpendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} on ${insights.highestSpendingCategory} this month.`}
           badge="Top Category"
           type="info"
         />
