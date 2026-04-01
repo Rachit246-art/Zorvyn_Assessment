@@ -25,7 +25,7 @@ const StatCard = ({ title, value, icon: Icon, trend, color }) => (
     <div className="card-content">
       <p className="card-title">{title}</p>
       <h3 className="card-value font-outfit">
-        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value)}
+        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)}
       </h3>
     </div>
   </div>
