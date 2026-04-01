@@ -16,9 +16,31 @@ import {
 import { useFinance } from '../context/FinanceContext';
 
 const Sidebar = () => {
-  const { role, setRole } = useFinance();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('dashboard');
+  const { role, setRole } = useFinance();
+
+  React.useEffect(() => {
+    const sections = ['overview', 'analytics', 'insights', 'transactions', 'settings'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = navItems.find(item => item.target === entry.target.id)?.id;
+            if (id) setActiveItem(id);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    sections.forEach((s) => {
+      const el = document.getElementById(s);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, target: 'overview' },
     { id: 'analytics', label: 'Analytics', icon: PieChart, target: 'analytics' },
@@ -31,7 +53,13 @@ const Sidebar = () => {
     setActiveItem(id);
     const element = document.getElementById(target);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const offset = 20;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
     if (window.innerWidth <= 1024) {
       setIsOpen(false);

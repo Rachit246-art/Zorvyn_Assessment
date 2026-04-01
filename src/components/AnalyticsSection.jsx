@@ -64,9 +64,9 @@ const AnalyticsSection = () => {
           <h3 className="font-outfit">Balance Trend</h3>
           <p>Last 7 days activity</p>
         </div>
-        <div className="chart-container" style={{ height: '300px', width: '100%', marginTop: '1rem' }}>
+        <div className="chart-container">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData}>
+            <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
@@ -106,15 +106,15 @@ const AnalyticsSection = () => {
           <h3 className="font-outfit">Spending Breakdown</h3>
           <p>By category</p>
         </div>
-        <div className="chart-container" style={{ height: '300px', width: '100%', marginTop: '1rem' }}>
+        <div className="chart-container">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={categoryData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={80}
+                innerRadius={window.innerWidth < 640 ? 50 : 60}
+                outerRadius={window.innerWidth < 640 ? 70 : 80}
                 paddingAngle={5}
                 dataKey="value"
               >
@@ -123,7 +123,12 @@ const AnalyticsSection = () => {
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="bottom" iconType="circle" />
+              <Legend 
+                verticalAlign="bottom" 
+                align="center" 
+                iconType="circle"
+                wrapperStyle={{ paddingTop: '20px', fontSize: '11px' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -140,6 +145,17 @@ const AnalyticsSection = () => {
         .chart-header p {
           font-size: 0.8125rem;
           color: var(--text-secondary);
+        }
+        .chart-container {
+          height: 300px;
+          width: 100%;
+          margin-top: 1rem;
+        }
+        @media (max-width: 640px) {
+          .chart-card { padding: 1rem; }
+          .chart-container { height: 200px; }
+          .chart-header h3 { font-size: 1.125rem; }
+          .chart-header p { font-size: 0.75rem; }
         }
       `}</style>
     </div>

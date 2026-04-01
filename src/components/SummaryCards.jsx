@@ -97,6 +97,16 @@ const StatCard = ({ title, value, icon: Icon, trend, color }) => (
         font-weight: 700;
         color: var(--text-primary);
       }
+
+      @media (max-width: 640px) {
+        .stat-card {
+           padding: 1.25rem 1rem;
+           gap: 0.75rem;
+        }
+        .icon-wrapper { width: 36px; height: 36px; border-radius: 10px; }
+        .card-value { font-size: 1.25rem; }
+        .card-title { font-size: 0.8125rem; }
+      }
     `}</style>
   </div>
 );

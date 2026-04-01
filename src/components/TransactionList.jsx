@@ -3,6 +3,7 @@ import {
   Search, 
   Filter, 
   Plus, 
+  Minus,
   Edit2, 
   Trash2, 
   ArrowUpCircle, 
@@ -16,7 +17,8 @@ import TransactionModal from './TransactionModal';
 const TransactionList = () => {
   const { 
     transactions, 
-    role, 
+    role,
+    loading,
     filters, 
     setFilters, 
     resetFilters,
@@ -25,8 +27,11 @@ const TransactionList = () => {
   } = useFinance();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [groupBy, setGroupBy] = useState('none');
 
-  const categories = ['all', 'Salary', 'Food', 'Utilities', 'Freelance', 'Transport', 'Shopping', 'Investment', 'Entertainment'];
+  const categories = ['All', 'Salary', 'Food', 'Utilities', 'Freelance', 'Transport', 'Shopping', 'Investment', 'Entertainment'];
 
   const handleEdit = (item) => {
     setEditingItem(item);
@@ -38,6 +43,26 @@ const TransactionList = () => {
       deleteTransaction(id);
     }
   };
+
+  // Apply date range filter on top of existing filters
+  const displayedTransactions = transactions.filter(t => {
+    if (dateFrom && t.date < dateFrom) return false;
+    if (dateTo && t.date > dateTo) return false;
+    return true;
+  });
+
+  // Group transactions by category or month
+  const groupedTransactions = (() => {
+    if (groupBy === 'none') return { All: displayedTransactions };
+    return displayedTransactions.reduce((groups, t) => {
+      const key = groupBy === 'category'
+        ? t.category
+        : new Date(t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(t);
+      return groups;
+    }, {});
+  })();
 
   return (
     <div className="transaction-section glass animate-fade-in" style={{ animationDelay: '0.3s' }}>
@@ -72,12 +97,12 @@ const TransactionList = () => {
       <div className="filters-row">
         <div className="filter-group">
           <label>Category</label>
-          <div className="select-wrapper glass-hover">
+          <div className="select-wrapper">
             <select 
               value={filters.category}
               onChange={(e) => setFilters({ ...filters, category: e.target.value })}
             >
-              {categories.map(c => <option key={c} value={c}>{c.charAt(0) + c.slice(1).toLowerCase()}</option>)}
+              {categories.map(c => <option key={c} value={c === 'All' ? 'all' : c}>{c}</option>)}
             </select>
             <ChevronDown size={14} className="chevron" />
           </div>
@@ -85,7 +110,7 @@ const TransactionList = () => {
 
         <div className="filter-group">
           <label>Type</label>
-          <div className="select-wrapper glass-hover">
+          <div className="select-wrapper">
             <select 
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -100,7 +125,7 @@ const TransactionList = () => {
 
         <div className="filter-group">
           <label>Sort By</label>
-          <div className="select-wrapper glass-hover">
+          <div className="select-wrapper">
             <select 
               value={filters.sortBy}
               onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
@@ -114,65 +139,161 @@ const TransactionList = () => {
           </div>
         </div>
 
-        <button className="reset-btn glass-hover" onClick={resetFilters}>
-           <span>Reset Filters</span>
-        </button>
+        <div className="filter-group">
+          <label>From Date</label>
+          <input
+            type="date"
+            className="date-input glass"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-group">
+          <label>To Date</label>
+          <input
+            type="date"
+            className="date-input glass"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-group">
+          <label>Group By</label>
+          <div className="select-wrapper">
+            <select value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+              <option value="none">No Grouping</option>
+              <option value="category">Category</option>
+              <option value="month">Month</option>
+            </select>
+            <ChevronDown size={14} className="chevron" />
+          </div>
+        </div>
+
+        <div className="reset-filter-group">
+          <button className="reset-btn" onClick={() => { resetFilters(); setDateFrom(''); setDateTo(''); setGroupBy('none'); }}>
+             <span>Reset Filters</span>
+          </button>
+        </div>
       </div>
 
+      {loading && (
+        <div className="api-loading-overlay">
+          <div className="api-spinner"></div>
+          <span>Syncing...</span>
+        </div>
+      )}
+
       <div className="table-container">
-        {transactions.length === 0 ? (
+        {displayedTransactions.length === 0 ? (
           <div className="empty-state glass">
              <div className="empty-icon glass">
                  <Search size={32} />
              </div>
              <h3>No transactions found</h3>
              <p>Try adjusting your search or filters to find what you're looking for.</p>
-             <button className="reset-btn glass-hover" onClick={resetFilters} style={{ margin: '1rem auto 0', height: '38px' }}>
+             <button className="reset-btn glass-hover" onClick={() => { resetFilters(); setDateFrom(''); setDateTo(''); setGroupBy('none'); }} style={{ margin: '1rem auto 0', height: '38px' }}>
                 Clear All Filters
              </button>
           </div>
         ) : (
-          <table className="transaction-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Amount</th>
-                {role === 'admin' && <th>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map(item => (
-                <tr key={item.id} className="transaction-row">
-                  <td className="date-cell">
-                    <div className="date-icon glass">
-                       {item.type === 'income' ? <ArrowUpCircle size={16} className="income-icon"/> : <ArrowDownCircle size={16} className="expense-icon"/>}
+          <>
+            {/* Mobile cards — one group at a time */}
+            <div className="mobile-cards">
+              {Object.entries(groupedTransactions).map(([groupName, groupItems]) => (
+                <div key={groupName}>
+                  {groupBy !== 'none' && (
+                    <div className="group-header">
+                      <span className="group-label">{groupName}</span>
+                      <span className="group-count">{groupItems.length} transaction{groupItems.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <span>{new Date(item.date).toLocaleDateString()}</span>
-                  </td>
-                  <td>
-                    <span className="category-tag glass">{item.category}</span>
-                  </td>
-                  <td className="note-cell">{item.note}</td>
-                  <td className={`amount-cell ${item.type}`}>
-                    {item.type === 'income' ? '+' : '-'}
-                    ${Number(item.amount).toFixed(2)}
-                  </td>
-                  {role === 'admin' && (
-                    <td className="actions-cell">
-                      <button onClick={() => handleEdit(item)} className="edit-btn glass-hover">
-                        <Edit2 size={14} />
-                      </button>
-                      <button onClick={() => handleDelete(item.id)} className="delete-btn glass-hover">
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
                   )}
-                </tr>
+                  {groupItems.map((item) => (
+                    <div key={item.id} className="mobile-transaction-card glass animate-fade-in">
+                      <div className="card-top">
+                        <div className="card-info">
+                          <div className={`type-indicator ${item.type}`}>
+                            {item.type === 'income' ? <Plus size={12} /> : <Minus size={12} />}
+                          </div>
+                          <span className="card-date">{new Date(item.date).toLocaleDateString()}</span>
+                        </div>
+                        <span className={`card-amount ${item.type}`}>
+                          {item.type === 'income' ? '+' : '-'}${Math.abs(item.amount).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="card-mid">
+                        <span className="card-category-badge">{item.category}</span>
+                        <p className="card-desc">{item.note || 'No description'}</p>
+                      </div>
+                      {role === 'admin' && (
+                        <div className="card-actions">
+                          <button onClick={() => handleEdit(item)} className="card-action-btn edit glass-hover">Edit</button>
+                          <button onClick={() => handleDelete(item.id)} className="card-action-btn delete glass-hover">Delete</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop — ONE single table, group headers as colspan rows */}
+            <table className="transaction-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                  {role === 'admin' && <th>Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(groupedTransactions).map(([groupName, groupItems]) => (
+                  <React.Fragment key={groupName}>
+                    {groupBy !== 'none' && (
+                      <tr className="group-header-row">
+                        <td colSpan={role === 'admin' ? 5 : 4}>
+                          <div className="group-header-cell">
+                            <span className="group-label">{groupName}</span>
+                            <span className="group-count">{groupItems.length} transaction{groupItems.length !== 1 ? 's' : ''}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {groupItems.map((item) => (
+                      <tr key={item.id} className="transaction-row animate-fade-in">
+                        <td className="date-cell">
+                           <div className="date-icon glass">
+                              {item.type === 'income' ? <Plus size={14} className="income-icon"/> : <Minus size={14} className="expense-icon"/>}
+                           </div>
+                           <span>{new Date(item.date).toLocaleDateString()}</span>
+                        </td>
+                        <td>
+                          <span className="category-tag glass">{item.category}</span>
+                        </td>
+                        <td className="note-cell">{item.note}</td>
+                        <td className={`amount-cell ${item.type}`}>
+                          {item.type === 'income' ? '+' : '-'}${Math.abs(item.amount).toFixed(2)}
+                        </td>
+                        {role === 'admin' && (
+                          <td className="actions-cell">
+                            <button onClick={() => handleEdit(item)} className="edit-btn glass-hover">
+                              <Edit2 size={14} />
+                            </button>
+                            <button onClick={() => handleDelete(item.id)} className="delete-btn glass-hover">
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </>
         )}
       </div>
 
@@ -185,6 +306,85 @@ const TransactionList = () => {
       )}
 
       <style jsx="true">{`
+        /* Loading overlay */
+        .api-loading-overlay {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1.25rem;
+          margin-bottom: 1rem;
+          background: rgba(99, 102, 241, 0.08);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          border-radius: 12px;
+          font-size: 0.8125rem;
+          color: var(--primary);
+          font-weight: 600;
+          animation: fadeIn 0.2s ease;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .api-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(99, 102, 241, 0.3);
+          border-top-color: var(--primary);
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+          flex-shrink: 0;
+        }
+
+        /* Date range inputs */
+        .date-input {
+          width: 100%;
+          padding: 10px 12px;
+          background: rgba(0,0,0,0.2);
+          border: 1px solid var(--border-glass);
+          border-radius: 10px;
+          color: white;
+          font-family: inherit;
+          font-size: 0.8125rem;
+          cursor: pointer;
+        }
+        .date-input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
+
+        /* Group headers (outside table — mobile) */
+        .group-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 0;
+          margin: 1.5rem 0 0.75rem 0;
+          border-bottom: 1px solid var(--border-glass);
+        }
+        /* Group headers (inside table — desktop) */
+        .group-header-row td {
+          padding: 0;
+          border: none;
+          background: transparent;
+        }
+        .group-header-cell {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1.25rem 0 0.5rem 0;
+          border-bottom: 1px solid var(--border-glass);
+          margin-bottom: 0.25rem;
+        }
+        .group-label {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: var(--text-primary);
+          font-family: 'Outfit', sans-serif;
+          letter-spacing: 0.02em;
+        }
+        .group-count {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          background: rgba(255,255,255,0.05);
+          padding: 3px 10px;
+          border-radius: 20px;
+          border: 1px solid var(--border-glass);
+        }
+
         .transaction-section {
           padding: 1.5rem;
           margin-top: 1rem;
@@ -203,8 +403,9 @@ const TransactionList = () => {
         }
         .header-actions {
           display: flex;
-          gap: 1rem;
+          gap: 0.75rem;
           align-items: center;
+          flex-wrap: wrap;
         }
         .search-bar {
           display: flex;
@@ -251,58 +452,102 @@ const TransactionList = () => {
         }
         .export-btn:hover { color: var(--primary); background: rgba(99, 102, 241, 0.1); }
         .filters-row {
-          display: flex;
-          gap: 1.5rem;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 1rem;
           margin-bottom: 1.5rem;
-          flex-wrap: wrap;
+          align-items: end;
         }
         .filter-group {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.375rem;
         }
         .filter-group label {
-          font-size: 0.75rem;
+          font-size: 0.6875rem;
           color: var(--text-secondary);
-          font-weight: 600;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.07em;
+          white-space: nowrap;
         }
         .reset-btn {
-          margin-top: auto;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
+          padding: 0.625rem 1rem;
+          border-radius: 10px;
+          border: 1px solid var(--border-glass);
           color: var(--text-secondary);
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           font-weight: 600;
-          height: 38px;
+          height: 42px;
+          width: 100%;
+          transition: var(--transition);
         }
-        .reset-btn:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        .reset-btn:hover { color: var(--danger); background: rgba(239, 68, 68, 0.08); border-color: rgba(239,68,68,0.3); }
         .select-wrapper {
           position: relative;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          min-width: 140px;
+          height: 42px;
+          border-radius: 10px;
+          border: 1px solid var(--border-glass);
+          background: rgba(0,0,0,0.2);
+          display: flex;
+          align-items: center;
+          box-sizing: border-box;
+          transition: border-color 0.2s ease;
         }
+        .select-wrapper:hover { border-color: rgba(255,255,255,0.18); }
         .select-wrapper select {
           appearance: none;
           background: none;
           border: none;
           color: var(--text-primary);
           width: 100%;
+          height: 100%;
+          padding: 0 2rem 0 0.875rem;
           font-size: 0.875rem;
           font-family: inherit;
+          cursor: pointer;
+          outline: none;
         }
         .select-wrapper .chevron {
           position: absolute;
-          right: 0.75rem;
+          right: 0.625rem;
           top: 50%;
           transform: translateY(-50%);
           pointer-events: none;
           color: var(--text-secondary);
+        }
+        .date-input {
+          width: 100%;
+          height: 42px;
+          padding: 0 0.875rem;
+          background: rgba(0,0,0,0.2);
+          border: 1px solid var(--border-glass);
+          border-radius: 10px;
+          color: white;
+          font-family: inherit;
+          font-size: 0.875rem;
+          cursor: pointer;
+          box-sizing: border-box;
+          transition: border-color 0.2s ease;
+        }
+        .date-input:hover { border-color: rgba(255,255,255,0.18); }
+        .date-input:focus { border-color: var(--primary); outline: none; }
+        .date-input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.4; cursor: pointer; }
+        .reset-filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+        }
+        .reset-filter-group::before {
+          content: ' ';
+          display: block;
+          font-size: 0.6875rem;
+          line-height: 1.2;
+          visibility: hidden;
         }
         .table-container {
           overflow-x: auto;
@@ -389,18 +634,44 @@ const TransactionList = () => {
         .empty-state h3 { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
         .empty-state p { font-size: 0.875rem; color: var(--text-secondary); max-width: 300px; }
         
+        .mobile-cards { display: none; }
         .transaction-table {
           min-width: 800px;
         }
 
-        @media (max-width: 640px) {
-          .section-header { flex-direction: column; align-items: flex-start; }
-          .search-bar { width: 100%; min-width: unset; }
-          .header-actions { width: 100%; flex-wrap: wrap; }
+        @media (max-width: 768px) {
+          .transaction-table { display: none; }
+          .mobile-cards { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; box-sizing: border-box; }
+          .mobile-transaction-card { padding: 1rem; width: 100%; box-sizing: border-box; overflow: hidden; }
+          .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; width: 100%; }
+          .card-info { display: flex; align-items: center; gap: 0.5rem; overflow: hidden; }
+          .card-date { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
+          .card-amount { font-size: 0.9375rem; font-weight: 700; white-space: nowrap; }
+          .card-mid { margin-bottom: 0.75rem; width: 100%; overflow: hidden; }
+          .card-category-badge { font-size: 0.5625rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.375rem; display: inline-block; }
+          .card-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+          .card-actions { display: flex; gap: 0.5rem; border-top: 1px solid var(--border-glass); padding-top: 0.75rem; margin-top: 0.375rem; width: 100%; }
+          .card-action-btn { flex: 1; padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-align: center; }
+          .card-action-btn.edit { color: var(--primary); }
+          .card-action-btn.delete { color: var(--danger); }
+          .type-indicator { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+          .type-indicator.income { background: rgba(16, 185, 129, 0.1); color: var(--secondary); }
+          .type-indicator.expense { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+          .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; width: 100%; }
+          .header-actions { width: 100%; flex-wrap: wrap; gap: 0.5rem; }
+          .search-bar { width: 100%; min-width: 100%; }
+          .export-actions { flex: 1; display: flex; gap: 0.5rem; }
+          .export-btn { flex: 1; text-align: center; }
           .add-btn { width: 100%; justify-content: center; }
-          .filters-row { gap: 1rem; }
-          .filter-group { flex: 1; min-width: 140px; }
-          .reset-btn { width: 100%; justify-content: center; margin-top: 0; }
+          .filters-row {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+          }
+          .filter-group { width: 100%; }
+          .reset-btn {
+            grid-column: span 2;
+          }
         }
       `}</style>
     </div>

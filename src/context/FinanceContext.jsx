@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { createTransaction, updateTransaction, deleteTransactionApi } from '../services/mockApi';
 
 const FinanceContext = createContext();
 
@@ -16,6 +17,7 @@ const INITIAL_TRANSACTIONS = [
 
 export const FinanceProvider = ({ children }) => {
   const [role, setRole] = useState(() => localStorage.getItem('finance_role') || 'admin');
+  const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem('finance_transactions');
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
@@ -115,20 +117,38 @@ export const FinanceProvider = ({ children }) => {
     };
   }, [transactions]);
 
-  // Actions
-  const addTransaction = (t) => {
+  // Actions — all go through the Mock API (async, with loading state)
+  const addTransaction = async (t) => {
     if (role !== 'admin') return;
-    setTransactions(prev => [{ ...t, id: Date.now().toString() }, ...prev]);
+    setLoading(true);
+    try {
+      const newItem = await createTransaction(t);
+      setTransactions(prev => [newItem, ...prev]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteTransaction = (id) => {
+  const deleteTransaction = async (id) => {
     if (role !== 'admin') return;
-    setTransactions(prev => prev.filter(t => t.id !== id));
+    setLoading(true);
+    try {
+      await deleteTransactionApi(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const editTransaction = (updated) => {
+  const editTransaction = async (updated) => {
     if (role !== 'admin') return;
-    setTransactions(prev => prev.map(t => t.id === updated.id ? updated : t));
+    setLoading(true);
+    try {
+      const saved = await updateTransaction(updated);
+      setTransactions(prev => prev.map(t => t.id === saved.id ? saved : t));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const exportData = (format) => {
@@ -173,6 +193,7 @@ export const FinanceProvider = ({ children }) => {
   return (
     <FinanceContext.Provider value={{
       role, setRole,
+      loading,
       transactions: filteredTransactions,
       allTransactions: transactions,
       stats,
