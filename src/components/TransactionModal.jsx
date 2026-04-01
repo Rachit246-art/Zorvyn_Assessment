@@ -27,8 +27,22 @@ const TransactionModal = ({ isOpen, onClose, editItem }) => {
     }
   }, [editItem]);
 
+  const clearForm = () => {
+    setFormData({
+      date: new Date().toISOString().split('T')[0],
+      amount: '',
+      category: 'Food',
+      type: 'expense',
+      note: ''
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (Number(formData.amount) <= 0) {
+      alert('Please enter a valid amount greater than zero.');
+      return;
+    }
     if (editItem) {
       editTransaction(formData);
     } else {
@@ -77,6 +91,7 @@ const TransactionModal = ({ isOpen, onClose, editItem }) => {
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    autoComplete="off"
                   />
                 </div>
 
@@ -116,11 +131,13 @@ const TransactionModal = ({ isOpen, onClose, editItem }) => {
                     placeholder="Enter description..." 
                     value={formData.note}
                     onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                    autoComplete="off"
                   />
                 </div>
               </div>
 
               <div className="modal-footer">
+                {!editItem && <button type="button" onClick={clearForm} className="cancel-btn glass-hover" style={{ marginRight: 'auto' }}>Clear</button>}
                 <button type="button" onClick={onClose} className="cancel-btn glass-hover">Cancel</button>
                 {role === 'admin' ? (
                   <button type="submit" className="submit-btn">{editItem ? 'Save Changes' : 'Add Transaction'}</button>
@@ -133,81 +150,6 @@ const TransactionModal = ({ isOpen, onClose, editItem }) => {
             </form>
           </motion.div>
 
-          <style jsx="true">{`
-            .modal-overlay {
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: rgba(0, 0, 0, 0.6);
-              backdrop-filter: blur(8px);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              z-index: 1000;
-              padding: 1rem;
-            }
-            .modal-content {
-              width: 100%;
-              max-width: 500px;
-              padding: 2rem;
-              border-radius: 24px;
-            }
-            .modal-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 2rem;
-            }
-            .modal-header h2 { font-size: 1.5rem; }
-            .close-btn { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-            .form-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 1.5rem;
-              margin-bottom: 2rem;
-            }
-            .full-width { grid-column: span 2; }
-            .input-group { display: flex; flex-direction: column; gap: 0.5rem; }
-            .input-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem; }
-            .input-group input, .input-group select, .input-group textarea {
-              background: rgba(255, 255, 255, 0.05);
-              border: 1px solid var(--border-glass);
-              border-radius: 12px;
-              padding: 0.75rem 1rem;
-              color: var(--text-primary);
-              font-family: inherit;
-              font-size: 0.875rem;
-              outline: none;
-              transition: var(--transition);
-            }
-            .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.08); }
-            .type-toggle { padding: 4px; border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-            .type-toggle button { padding: 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
-            .type-toggle button.active { background: var(--bg-card-hover); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-            .modal-footer { display: flex; gap: 1rem; justify-content: flex-end; }
-            .cancel-btn { padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.875rem; color: var(--text-secondary); }
-            .submit-btn { padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.875rem; background: var(--primary); color: white; }
-            .submit-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
-            .viewer-notice {
-              padding: 0.75rem 1.5rem;
-              border-radius: 12px;
-              background: rgba(255, 255, 255, 0.05);
-              color: var(--text-secondary);
-              font-size: 0.875rem;
-              font-weight: 600;
-              border: 1px solid var(--border-glass);
-            }
-            
-            @media (max-width: 500px) {
-              .form-grid { grid-template-columns: 1fr; gap: 1rem; }
-              .full-width { grid-column: auto; }
-              .modal-content { padding: 1.5rem; border-radius: 0; min-height: 100vh; max-width: 100vw; display: flex; flex-direction: column; overflow-y: auto; }
-              .modal-footer { flex-direction: column; gap: 0.75rem; margin-top: auto; }
-              .modal-footer button, .viewer-notice { width: 100%; text-align: center; }
-            }
-          `}</style>
         </div>
       )}
     </AnimatePresence>

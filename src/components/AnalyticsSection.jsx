@@ -134,30 +134,6 @@ const AnalyticsSection = () => {
         </div>
       </div>
 
-      <style jsx="true">{`
-        .chart-card {
-          padding: 1.5rem;
-        }
-        .chart-header h3 {
-          font-size: 1.125rem;
-          margin-bottom: 0.25rem;
-        }
-        .chart-header p {
-          font-size: 0.8125rem;
-          color: var(--text-secondary);
-        }
-        .chart-container {
-          height: 300px;
-          width: 100%;
-          margin-top: 1rem;
-        }
-        @media (max-width: 640px) {
-          .chart-card { padding: 1rem; }
-          .chart-container { height: 200px; }
-          .chart-header h3 { font-size: 1.125rem; }
-          .chart-header p { font-size: 0.75rem; }
-        }
-      `}</style>
     </div>
   );
 };

@@ -9,12 +9,15 @@ import TransactionList from './components/TransactionList';
 import { useFinance } from './context/FinanceContext';
 
 const Dashboard = () => {
-  const { loading, user, setUser, toast, showNotification } = useFinance();
+  const finance = useFinance();
+  if (!finance) return null;
+  const { loading, user = {}, setUser, toast, showNotification } = finance;
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [savedName, setSavedName] = useState(user.name);
-  const [savedEmail, setSavedEmail] = useState(user.email);
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [savedName, setSavedName] = useState(user?.name || '');
+  const [savedEmail, setSavedEmail] = useState(user?.email || '');
 
   const handleEdit = () => setIsEditing(true);
 

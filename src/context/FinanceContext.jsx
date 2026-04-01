@@ -2,7 +2,15 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { createTransaction, updateTransaction, deleteTransactionApi } from '../services/mockApi';
 
-const FinanceContext = createContext();
+const FinanceContext = createContext({
+  user: { name: 'John Doe', email: 'john@zorvyan.com', avatar: '' },
+  transactions: [],
+  role: 'admin',
+  loading: true,
+  stats: { income: 0, expenses: 0, balance: 0 },
+  insights: { highestSpendingCategory: '', currentMonthSpend: 0, prevMonthSpend: 0, spendingTrend: 0 },
+  filters: { search: '', category: 'all', type: 'all', sortBy: 'date-desc' }
+});
 
 const INITIAL_TRANSACTIONS = [
   { id: '1', date: '2026-03-28', amount: 1200, category: 'Salary', type: 'income', note: 'Monthly Salary' },
@@ -18,6 +26,19 @@ const INITIAL_TRANSACTIONS = [
 export const FinanceProvider = ({ children }) => {
   const [role, setRole] = useState(() => localStorage.getItem('finance_role') || 'admin');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('finance_user');
+      if (saved && saved !== 'undefined') {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {
+      console.warn('Failed to parse user from localStorage', e);
+    }
+    return { name: 'John Doe', email: 'john@zorvyan.com', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John' };
+  });
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem('finance_transactions');
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
@@ -33,6 +54,10 @@ export const FinanceProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('finance_role', role);
   }, [role]);
+
+  useEffect(() => {
+    localStorage.setItem('finance_user', JSON.stringify(user));
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('finance_transactions', JSON.stringify(transactions));
@@ -117,6 +142,11 @@ export const FinanceProvider = ({ children }) => {
     };
   }, [transactions]);
 
+  const showNotification = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
   // Actions — all go through the Mock API (async, with loading state)
   const addTransaction = async (t) => {
     if (role !== 'admin') return;
@@ -124,6 +154,7 @@ export const FinanceProvider = ({ children }) => {
     try {
       const newItem = await createTransaction(t);
       setTransactions(prev => [newItem, ...prev]);
+      showNotification('Transaction added successfully!');
     } finally {
       setLoading(false);
     }
@@ -135,6 +166,7 @@ export const FinanceProvider = ({ children }) => {
     try {
       await deleteTransactionApi(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
+      showNotification('Transaction deleted!', 'info');
     } finally {
       setLoading(false);
     }
@@ -146,6 +178,7 @@ export const FinanceProvider = ({ children }) => {
     try {
       const saved = await updateTransaction(updated);
       setTransactions(prev => prev.map(t => t.id === saved.id ? saved : t));
+      showNotification('Transaction updated!');
     } finally {
       setLoading(false);
     }
@@ -193,7 +226,9 @@ export const FinanceProvider = ({ children }) => {
   return (
     <FinanceContext.Provider value={{
       role, setRole,
+      user, setUser,
       loading,
+      toast, showNotification,
       transactions: filteredTransactions,
       allTransactions: transactions,
       stats,

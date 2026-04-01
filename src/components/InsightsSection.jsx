@@ -21,35 +21,6 @@ const InsightCard = ({ title, value, icon: Icon, description, badge, type }) => 
       <p className="insight-value">{value}</p>
       <p className="insight-desc">{description}</p>
     </div>
-
-    <style jsx="true">{`
-      .insight-card {
-        padding: 1.5rem;
-        display: flex;
-        gap: 1.25rem;
-        align-items: flex-start;
-      }
-      .insight-icon-container {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(99, 102, 241, 0.1);
-        color: var(--primary);
-        flex-shrink: 0;
-      }
-      .insight-details { flex: 1; }
-      .insight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-      .insight-header h4 { font-size: 0.875rem; color: var(--text-secondary); font-weight: 500; }
-      .insight-value { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; }
-      .insight-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
-      .badge { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
-      .badge.positive { background: rgba(16, 185, 129, 0.1); color: var(--secondary); }
-      .badge.negative { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-      .badge.info { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
-    `}</style>
   </div>
 );
 
@@ -97,14 +68,6 @@ const InsightsSection = () => {
         />
       </div>
 
-      <style jsx="true">{`
-        .insights-section { margin-bottom: 2rem; }
-        .section-title { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
-        .section-title h2 { font-size: 1.5rem; font-weight: 700; }
-        .section-title .icon { color: var(--primary); }
-        .insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-        @media (max-width: 1024px) { .insights-grid { grid-template-columns: 1fr; } }
-      `}</style>
     </div>
   );
 };

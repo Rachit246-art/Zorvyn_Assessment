@@ -18,7 +18,9 @@ import { useFinance } from '../context/FinanceContext';
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('dashboard');
-  const { role, setRole } = useFinance();
+  const finance = useFinance();
+  if (!finance) return null;
+  const { role, setRole, user = {} } = finance;
 
   React.useEffect(() => {
     const sections = ['overview', 'analytics', 'insights', 'transactions', 'settings'];
@@ -68,26 +70,24 @@ const Sidebar = () => {
 
   return (
     <>
-      <button 
-        className="mobile-menu-btn glass"
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'none',
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          padding: '0.75rem',
-          zIndex: 100
-        }}
-      >
-        {isOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+      <header className="mobile-header glass">
+        <div className="logo-container">
+          <div className="logo-icon">Z</div>
+          <span className="font-outfit">Zorvyan</span>
+        </div>
+        <button 
+          className="mobile-menu-toggle glass-hover"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
 
       <aside className={`sidebar glass ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="logo-container">
-            <div className="logo-icon">V</div>
-            <span className="font-outfit">Vortex Financial</span>
+            <div className="logo-icon">Z</div>
+            <span className="font-outfit">Zorvyan Financial</span>
           </div>
         </div>
 
@@ -126,11 +126,11 @@ const Sidebar = () => {
           
           <div className="user-profile">
             <img 
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" 
+              src={user.avatar} 
               alt="User" 
             />
             <div className="user-info">
-              <p className="user-name">John Doe</p>
+              <p className="user-name">{user.name}</p>
               <p className="user-role">{role.charAt(0).toUpperCase() + role.slice(1)} Mode</p>
             </div>
             <button className="logout-btn">
@@ -139,172 +139,6 @@ const Sidebar = () => {
           </div>
         </div>
       </aside>
-
-      <style jsx="true">{`
-        .sidebar {
-          width: var(--nav-width);
-          height: 100vh;
-          position: fixed;
-          left: 0;
-          top: 0;
-          border-radius: 0;
-          border-left: none;
-          border-top: none;
-          border-bottom: none;
-          display: flex;
-          flex-direction: column;
-          z-index: 50;
-          padding: 1.5rem;
-          transition: var(--transition);
-        }
-
-        .sidebar-header {
-          margin-bottom: 2.5rem;
-        }
-
-        .logo-container {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          font-weight: 700;
-          font-size: 1.25rem;
-          background: linear-gradient(135deg, var(--primary), var(--secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .logo-icon {
-          width: 32px;
-          height: 32px;
-          background: linear-gradient(135deg, var(--primary), var(--secondary));
-          -webkit-text-fill-color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          font-size: 1rem;
-        }
-
-        .sidebar-nav {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          flex: 1;
-        }
-
-        .nav-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.875rem 1rem;
-          border-radius: 12px;
-          color: var(--text-secondary);
-          width: 100%;
-          text-align: left;
-        }
-
-        .nav-item:hover, .nav-item.active {
-          background: var(--bg-card-hover);
-          color: var(--text-primary);
-        }
-
-        .nav-item.active {
-          box-shadow: inset 0 0 0 1px var(--border-glass);
-          background: var(--primary);
-          color: white;
-        }
-
-        .sidebar-footer {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid var(--border-glass);
-        }
-
-        .role-switcher {
-          padding: 4px;
-          border-radius: 12px;
-        }
-
-        .role-toggle {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 4px;
-        }
-
-        .role-toggle button {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          padding: 8px;
-          border-radius: 8px;
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-          font-weight: 500;
-        }
-
-        .role-toggle button.active {
-          background: var(--bg-card-hover);
-          color: white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .user-profile {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .user-profile img {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: var(--bg-card-hover);
-        }
-
-        .user-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .user-name {
-          font-weight: 600;
-          font-size: 0.875rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .user-role {
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-        }
-
-        .logout-btn {
-          color: var(--text-secondary);
-        }
-
-        .logout-btn:hover {
-          color: var(--danger);
-        }
-
-        @media (max-width: 1024px) {
-          .mobile-menu-btn { display: block !important; }
-          .sidebar {
-            transform: translateX(-100%);
-            width: 280px;
-            background: rgba(10, 10, 12, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
-          }
-          .sidebar.open {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </>
   );
 };
